@@ -7,6 +7,15 @@ authors = ["Your Name <you@example.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 flask = "^1.1.2"
+bs4 = "^0.0.1"
+flask-restful = "^0.3.8"
+flask-pymongo = "^2.3.0"
+pymongo = "^3.11.3"
+isodate = "^0.6.0"
+werkzeug = "^1.0.1"
+dnspython = "^2.1.0"
+marshmallow = "^3.11.1"
+webargs = "^8.0.0"
 
 [tool.poetry.dev-dependencies]
 
