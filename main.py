@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify
-from flask_restful import Api, Resource, reqparse
+from flask import Flask, jsonify
+from flask_restful import Api, Resource
 from flask_pymongo import PyMongo
+from flask_cors import CORS
 
-from bson.objectid import ObjectId
+from flask_jwt_extended import JWTManager
 
-from utils import parse_json, build_query
+import datetime
 
 # Resources
 from resources.weapons import Weapons, WeaponsList
@@ -14,8 +15,21 @@ from resources.weaponAttachments import WeaponAttachments, WeaponAttachmentsList
 from resources.twitchStreamers import TwitchStreamers, TwitchStreamersList
 from resources.weaponBuilds import WeaponBuilds, WeaponBuildsList
 
+from resources.users import UsersList, UsersLogin, UsersRegister, UsersLogout, TokenRefresh
+
+from resources.secretResource import SecretResource
+
 # Flask app configuration
 app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = '44ec03172fd2120bef67e5cf'
+
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(minutes=30)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
+app.config['JWT_ERROR_MESSAGE_KEY'] = "message"
+
+CORS(app)
+
+jwt = JWTManager(app)
 
 # Mongo DB
 mongo_db_uri = "mongodb+srv://admin:owenek@cluster0.ur0zv.mongodb.net/restAPIWeapons?retryWrites=true&w=majority"
@@ -33,6 +47,16 @@ db = mongo.db
 # }
 
 # DB collections for resources
+UsersList.usersCollection = db.users
+
+UsersLogin.usersCollection = db.users
+UsersLogin.tokensCollection = db.tokens
+
+UsersRegister.usersCollection = db.users
+
+TwitchStreamersList.streamersCollection = db.twitchStreamers
+TwitchStreamers.streamersCollection = db.twitchStreamers
+
 Weapons.weaponsCollection = db.weapons
 Weapons.weaponTypesCollection = db.weaponTypes
 
@@ -51,9 +75,6 @@ WeaponAttachments.weaponsCollection = db.weapons
 WeaponAttachmentsList.weaponAttachmentsCollection = db.weaponAttachments
 WeaponAttachmentsList.weaponsCollection = db.weapons
 WeaponAttachmentsList.weaponAttachmentTypesCollection = db.weaponAttachmentTypes
-
-TwitchStreamersList.streamersCollection = db.twitchStreamers
-TwitchStreamers.streamersCollection = db.twitchStreamers
 
 WeaponBuildsList.weaponBuildsCollection = db.weaponBuilds
 WeaponBuildsList.streamersCollection = db.twitchStreamers
@@ -89,6 +110,14 @@ api.add_resource(TwitchStreamers, "/streamers/<string:id>")
 
 api.add_resource(WeaponBuildsList, "/builds")
 api.add_resource(WeaponBuilds, "/builds/<string:id>")
+
+api.add_resource(UsersRegister, "/register")
+
+api.add_resource(UsersLogin, "/login")
+api.add_resource(UsersLogout, "/logout")
+api.add_resource(TokenRefresh, "/token/refresh")
+
+api.add_resource(SecretResource, "/secret")
 
 # api.add_resource(WeaponAttachments, "/weapon/attachments/weapon/<string:weaponName>", endpoint="weaponattachmentsweaponname")
 # api.add_resource(WeaponAttachments, "/weapon/attachments/weaponid/<string:weaponId>", endpoint="weaponattachmentsweaponId")

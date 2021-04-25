@@ -5,6 +5,12 @@ from utils import build_query, parse_json
 
 from bson.objectid import ObjectId
 
+# db.TwitchStreamer 
+# _id = ObjectId()
+# user_id = ObjectId()
+# twitch_username = String 
+# twitch_profile  = String 
+
 class TwitchStreamersList(Resource):
 
   data = []
@@ -12,15 +18,17 @@ class TwitchStreamersList(Resource):
 
   def __init__(self):
     self.reqparseGet = reqparse.RequestParser()
-    self.reqparseGet.add_argument('name', type = str, default = "", location = 'args')
+    self.reqparseGet.add_argument('user_id', type = str, default = 0, location = 'args')
     self.reqparseGet.add_argument('twitch_username', type = str, default = "", location = 'args')
     self.reqparseGet.add_argument('twitch_profile', type = str, default = "", location = 'args')
     self.reqparseGet.add_argument('limit', type = int, default = 0, location = 'args')
+
 
     self.reqparsePost = reqparse.RequestParser()
     self.reqparsePost.add_argument('name', type=str, required=True, location='json')
     self.reqparsePost.add_argument('twitch_username', type=str, required=True, location='json')
     self.reqparsePost.add_argument('twitch_profile',  type=str, required=True, location='json')
+    self.reqparsePost.add_argument('user_id', type=str, required=True, location='json')
 
     super(TwitchStreamersList, self).__init__()
 

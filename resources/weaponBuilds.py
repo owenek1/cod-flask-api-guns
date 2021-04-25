@@ -16,7 +16,12 @@ class WeaponBuildsList(Resource):
 
   def __init__(self):
       self.reqparseGet = reqparse.RequestParser()
-      self.reqparseGet.add_argument('username', type = str, default = "", location = 'args')
+      self.reqparseGet.add_argument('weapon', type = str, default = "", location = 'args')
+      self.reqparseGet.add_argument('weapon_id', type = str, default = "", location = 'args')
+
+      self.reqparseGet.add_argument('streamer', type = str, default = "", location = 'args')
+      self.reqparseGet.add_argument('streamer_id', type = str, default = "", location = 'args')
+
       self.reqparseGet.add_argument('limit', type = int, default = 0, location = 'args')
 
       self.reqparsePost = reqparse.RequestParser()
@@ -32,6 +37,20 @@ class WeaponBuildsList(Resource):
 
     # Build query to filter the db results
     query = build_query(args)
+
+    if 'streamer' in query.keys():
+      streamer = self.streamersCollection.find_one({"twitch_username" : query['streamer']})
+      streamer = parse_json(streamer)
+      streamerId = ObjectId(streamer['_id'])
+      query['streamer_id'] = streamerId
+      query.pop('streamer')
+    
+    if 'weapon' in query.keys():
+      weapon = self.weaponsCollection.find_one({"name_lower" : query['weapon']})
+      weapon = parse_json(weapon)
+      weaponId = ObjectId(weapon['_id'])
+      query['weapon_id'] = weaponId
+      query.pop('weapon')
 
     weaponBuilds = [] 
     if args['limit'] > 0:

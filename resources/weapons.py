@@ -9,15 +9,19 @@ from bson.objectid import ObjectId
 class WeaponsList(Resource):
 
   data = []
+  totalPages = 0
+  currentPage = 0
 
   weaponsCollection = None
   weaponTypesCollection = None
 
   def __init__(self):
     self.reqparseGet = reqparse.RequestParser()
-    self.reqparseGet.add_argument('name', type = str, default = "", location = 'args')
-    self.reqparseGet.add_argument('type', type = str, default = "", location = 'args')
+    self.reqparseGet.add_argument('name',  type = str, default = "", location = 'args')
+    self.reqparseGet.add_argument('type',  type = str, default = "", location = 'args')
     self.reqparseGet.add_argument('limit', type = int, default = 0, location = 'args')
+    self.reqparseGet.add_argument('page',  type = int, default = 1, location = 'args')
+    self.reqparseGet.add_argument('search', type = str, default = "", location = 'args')
 
     self.reqparsePost = reqparse.RequestParser()
     self.reqparsePost.add_argument('name', type=str, required=True, location = 'json')
@@ -36,15 +40,26 @@ class WeaponsList(Resource):
 
     # Filter for type
     if 'type' in query.keys():
-      weaponType = self.weaponTypesCollection.find_one({"name_lower" : query['type'].lower()})
-      if weaponType: 
-        weaponType = parse_json(weaponType)
+      weaponType = self.weaponTypesCollection.find_one({"name_lower" : query['type']})
+      weaponType = parse_json(weaponType)
+
+      if weaponType:
         query['type_id'] = ObjectId(weaponType['_id'])
         query.pop('type')
 
-    weapons = [] 
+    weapons = []
+    weaponsTotalCount = self.weaponsCollection.find(query).count()
+
+    print(query)
+
+    # Pagination for the results
     if args['limit'] > 0:
-      weapons = self.weaponsCollection.find(query).limit(args['limit'])
+      skips = args['limit'] * (args['page'] - 1)
+      # { $text: { $search: "\"coffee shop\"" } }
+      weapons = self.weaponsCollection.find(query).skip(skips).limit(args['limit'])
+      totalPages = round(weaponsTotalCount / args['limit'])
+      self.totalPages = totalPages
+      self.currentPage = args['page']
     else:
       weapons = self.weaponsCollection.find(query)
     
@@ -59,8 +74,8 @@ class WeaponsList(Resource):
       w['type'] = weaponType[0]
     
     self.data = weapons
-
-    return jsonify(status = "ok", data = self.data)
+    
+    return jsonify(status = "ok", data = self.data, totalPages = self.totalPages, currentPage = self.currentPage, totalElements=weaponsTotalCount)
 
   # Add new weapon
   def post(self):

@@ -7,6 +7,11 @@ def build_query(args):
 
   query = {}
 
+  # Search regex
+  if 'search' in args.keys() and args['search'] != "":
+    nameToLower = args['search'].replace(" ","").replace("\"","").lower()
+    query['name_lower'] = { "$regex": nameToLower }
+
   # Filter by name
   if 'name' in args.keys() and args['name'] != "":
     query['name_lower'] = args['name'].replace(" ","").replace("\"","").lower()
@@ -21,14 +26,15 @@ def build_query(args):
 
   # Filter by weapon
   if 'weapon' in args.keys() and args['weapon'] != "":
-    query['weapon'] = args['weapon'].replace(" ","").lower()
+    query['weapon'] = args['weapon'].replace(" ","").replace("\"","").lower()
 
+  # Filter by weapon id
   if 'weapon_id' in args.keys() and args['weapon_id'] != "":
     query['weapon_id'] = ObjectId(args['weapon_id'])
 
-  # Filter by type
+  # Filter by type 
   if 'type' in args.keys() and args['type'] != "":
-    query['type'] = args['type'].replace(" ", "").lower()
+    query['type'] = args['type'].replace(" ", "").replace("\"","").lower()
 
   # Filter by type id
   if 'type_id' in args.keys() and args['type_id'] != "":
@@ -37,6 +43,10 @@ def build_query(args):
   # Filter by streamer id
   if 'streamer_id' in args.keys() and args['streamer_id'] != "":
     query['streamer_id'] = ObjectId(args['streamer_id'])
+
+  # Filter by streamer
+  if 'streamer' in args.keys() and args['streamer'] != "":
+    query['streamer'] = args['streamer'].replace("\"", "").lower()
 
   return query
 

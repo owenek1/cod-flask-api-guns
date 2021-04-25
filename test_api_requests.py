@@ -137,3 +137,14 @@ def addWeaponBuild(name, streamer_id, weapon_id, attachments):
     '',
     ''
   ] 
+
+# Add user
+def addUser(email, password):
+
+  userToAdd = {}
+
+  userToAdd['email'] = email
+  userToAdd['password'] = password
+
+  response = requests.post(BASE + "/users", json=userToAdd)
+  print(response.json())
