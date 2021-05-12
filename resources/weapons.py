@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import current_app, request, jsonify
 from flask_restful import Resource, reqparse
 
 from utils import build_query, parse_json
@@ -12,8 +12,7 @@ class WeaponsList(Resource):
   totalPages = 0
   currentPage = 0
 
-  weaponsCollection = None
-  weaponTypesCollection = None
+  db = None
 
   def __init__(self):
     self.reqparseGet = reqparse.RequestParser()
@@ -28,6 +27,9 @@ class WeaponsList(Resource):
 
     self.reqparsePut = reqparse.RequestParser()
     self.reqparsePost.add_argument('name', type=str, location = 'json')
+
+    # DB collections 
+    self.db = current_app.config['DB_COLLECTIONS']
 
     super(WeaponsList, self).__init__()
 
@@ -48,30 +50,49 @@ class WeaponsList(Resource):
         query.pop('type')
 
     weapons = []
-    weaponsTotalCount = self.weaponsCollection.find(query).count()
-
-    print(query)
+    weaponsTotalCount = self.db.weapons.find(query).count()
 
     # Pagination for the results
     if args['limit'] > 0:
       skips = args['limit'] * (args['page'] - 1)
       # { $text: { $search: "\"coffee shop\"" } }
-      weapons = self.weaponsCollection.find(query).skip(skips).limit(args['limit'])
+      weapons = self.db.weapons.find(query).skip(skips).limit(args['limit'])
       totalPages = round(weaponsTotalCount / args['limit'])
       self.totalPages = totalPages
       self.currentPage = args['page']
     else:
-      weapons = self.weaponsCollection.find(query)
+      weapons = self.db.weapons.find(query)
     
     weapons = parse_json(weapons)
 
+    # Weapon types
     inTypesQueryIds = [ObjectId(w['type_id']) for w in weapons]
-    weaponTypes = self.weaponTypesCollection.find({ "_id": { "$in": inTypesQueryIds }})
+    weaponTypes = self.db.weaponTypes.find({ "_id": { "$in": inTypesQueryIds }})
     weaponTypes = parse_json(weaponTypes)
 
     for w in weapons: 
       weaponType = [weaponType for weaponType in weaponTypes if w['type_id'] == weaponType['_id']]
       w['type'] = weaponType[0]
+
+      # Weapon attachments
+      weaponAttachments = self.db.weaponAttachments.find({"weapon_id" : ObjectId(w['_id'])})
+      weaponAttachments = parse_json(weaponAttachments)
+
+      availableWeaponAttachments = []
+
+      if len(weaponAttachments) > 0:
+
+        # Available attachment types
+        weaponAttachmentTypes = self.db.weaponAttachmentTypes.find({})
+        weaponAttachmentTypes = parse_json(weaponAttachmentTypes)
+
+        for weaponAttachmentType in weaponAttachmentTypes:
+          for weaponAttachment in weaponAttachments:
+            if weaponAttachment['type_id'] == weaponAttachmentType['_id']:
+              availableWeaponAttachments.append(weaponAttachmentType)
+              break
+      
+      w['available_attachments'] = availableWeaponAttachments
     
     self.data = weapons
     
@@ -108,7 +129,7 @@ class WeaponsList(Resource):
   def _checkWeaponExists(self, name_lower):
     exists = False 
 
-    weapon = self.weaponsCollection.find_one({"name_lower" : name_lower})
+    weapon = self.db.weapons.find_one({"name_lower" : name_lower})
 
     if weapon: 
       exists = True
@@ -119,18 +140,44 @@ class Weapons(Resource):
 
   data = []
 
-  weaponsCollection = None
-  weaponTypesCollection = None
+  db = None
+
+  def __init__(self):
+    # DB collections 
+    self.db = current_app.config['DB_COLLECTIONS']
+
+    super(Weapons, self).__init__()
 
   # Get weapon by id
   def get(self, id):
     
-    weapons = self.weaponsCollection.find_one({"_id" : ObjectId(id)})
+    weapons = self.db.weapons.find_one({"_id" : ObjectId(id)})
     weapons = parse_json(weapons)
 
+    # Weapon type
     if "type_id" in weapons.keys():
-      weaponType = self.weaponTypesCollection.find_one({"_id" : ObjectId(weapons['type_id'])})
+      weaponType = self.db.weaponTypes.find_one({"_id" : ObjectId(weapons['type_id'])})
       weapons['type'] = parse_json(weaponType)
+
+    # Weapon attachments
+    weaponAttachments = self.db.weaponAttachments.find({"weapon_id" : ObjectId(id)})
+    weaponAttachments = parse_json(weaponAttachments)
+
+    availableWeaponAttachments = []
+
+    if len(weaponAttachments) > 0:
+
+      # Available attachment types
+      weaponAttachmentTypes = self.db.weaponAttachmentTypes.find({})
+      weaponAttachmentTypes = parse_json(weaponAttachmentTypes)
+
+      for weaponAttachmentType in weaponAttachmentTypes:
+        for weaponAttachment in weaponAttachments:
+          if weaponAttachment['type_id'] == weaponAttachmentType['_id']:
+            availableWeaponAttachments.append(weaponAttachmentType)
+            break
+
+    weapons['available_attachments'] = availableWeaponAttachments
 
     self.data = weapons
 
@@ -156,12 +203,12 @@ class Weapons(Resource):
     update['$set'] = updateFields
 
     # Update
-    updateResult = self.weaponsCollection.update_one({"_id": ObjectId(id)}, update)
+    updateResult = self.db.weapons.update_one({"_id": ObjectId(id)}, update)
     if updateResult.matched_count == 0:
       return {"response" : "Weapon with id {} does not exist!".format(id)}, 404
 
     # Get updated weapon
-    weapon = self.weaponsCollection.find_one({"_id" : ObjectId(id)})
+    weapon = self.db.weapons.find_one({"_id" : ObjectId(id)})
 
     # Set data
     self.data = parse_json(weapon)
@@ -181,7 +228,7 @@ class Weapons(Resource):
     # Check statistic fields update
     if 'statistics' in requestJson.keys():
       # By default get old values for the statistics field
-      weapon = self.weaponsCollection.find_one({"_id" : ObjectId(weaponId)})
+      weapon = self.db.weapons.find_one({"_id" : ObjectId(weaponId)})
       updateFields['statistics'] = weapon['statistics']
 
       # Update only the fields that are needded
@@ -197,7 +244,7 @@ class Weapons(Resource):
 
   # Delete weapon
   def delete(self, id):
-    weapons = self.weaponsCollection.find_one_and_delete({"_id" : ObjectId(id)})
+    weapons = self.db.weapons.find_one_and_delete({"_id" : ObjectId(id)})
 
     if not weapons:
       return {"response" : "Weapon with {} does not exist!".format(id)}, 404

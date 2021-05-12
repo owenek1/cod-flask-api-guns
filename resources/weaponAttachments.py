@@ -31,7 +31,7 @@ class WeaponAttachmentsList(Resource):
     query = build_query(args)
 
     if 'weapon' in query.keys(): 
-      weapon = self.weaponsCollection.find_one({"name_lower" : query['weapon']})
+      weapon = self.weaponsCollection.find_one({"name_lower" : {"$regex": query['weapon']}})
 
       if weapon: 
         weapon = parse_json(weapon)
@@ -39,7 +39,7 @@ class WeaponAttachmentsList(Resource):
         query.pop('weapon')
 
     if 'type' in query.keys(): 
-      weaponAttachmentType = self.weaponAttachmentTypesCollection.find_one({"name_lower" : query['type']})
+      weaponAttachmentType = self.weaponAttachmentTypesCollection.find_one({"name_lower" : {"$regex": query['type']}})
 
       if weaponAttachmentType:
         weaponAttachmentType = parse_json(weaponAttachmentType)
@@ -97,11 +97,18 @@ class WeaponAttachmentsList(Resource):
 
     return jsonify(status = "ok", data = self.data)
 
+  def delete(self):
+    
+    self.weaponAttachmentsCollection.delete_many({})
+
+    return jsonify(status = "ok")
+
   def _checkIfExists(self, name_lower, weaponId):
     exists = False
 
     weaponAttachment = self.weaponAttachmentsCollection.find({"name_lower" : name_lower, "weapon_id" : ObjectId(weaponId)})
-
+    weaponAttachment = parse_json(weaponAttachment)
+    
     # Weapon attachemnt exists
     if weaponAttachment:
       exists = True

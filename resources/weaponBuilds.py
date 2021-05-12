@@ -10,23 +10,22 @@ class WeaponBuildsList(Resource):
   data = []
 
   weaponBuildsCollection = None
-  streamersCollection = None
   weaponsCollection = None
   weaponAttachmentsCollection = None
+  usersCollection = None
 
   def __init__(self):
       self.reqparseGet = reqparse.RequestParser()
       self.reqparseGet.add_argument('weapon', type = str, default = "", location = 'args')
       self.reqparseGet.add_argument('weapon_id', type = str, default = "", location = 'args')
-
-      self.reqparseGet.add_argument('streamer', type = str, default = "", location = 'args')
-      self.reqparseGet.add_argument('streamer_id', type = str, default = "", location = 'args')
-
+      self.reqparseGet.add_argument('user', type = str, default = "", location = 'args')
+      self.reqparseGet.add_argument('user_id', type = str, default = "", location = 'args')
+      self.reqparseGet.add_argument('nightbot', type=bool, default = False, location='args')
       self.reqparseGet.add_argument('limit', type = int, default = 0, location = 'args')
 
       self.reqparsePost = reqparse.RequestParser()
       self.reqparsePost.add_argument('name', type = str, required = True, location = 'json')
-      self.reqparsePost.add_argument('streamer_id', type = str, required = True, location = 'json')
+      self.reqparsePost.add_argument('user_id', type = str, required = True, location = 'json')
       self.reqparsePost.add_argument('weapon_id', type = str, required = True, location = 'json')
 
       super(WeaponBuildsList, self).__init__()
@@ -38,27 +37,73 @@ class WeaponBuildsList(Resource):
     # Build query to filter the db results
     query = build_query(args)
 
-    if 'streamer' in query.keys():
-      streamer = self.streamersCollection.find_one({"twitch_username" : query['streamer']})
-      streamer = parse_json(streamer)
-      streamerId = ObjectId(streamer['_id'])
-      query['streamer_id'] = streamerId
-      query.pop('streamer')
+    print(args['nightbot'])
     
+    # Filter by weapon
     if 'weapon' in query.keys():
-      weapon = self.weaponsCollection.find_one({"name_lower" : query['weapon']})
+      weapon = self.weaponsCollection.find_one({"name_lower" : {"$regex": query['weapon']}})
       weapon = parse_json(weapon)
+
+      # Return empty list if weapon not found
+      if not weapon:
+        return jsonify(status = "ok", data = self.data)
+
       weaponId = ObjectId(weapon['_id'])
       query['weapon_id'] = weaponId
       query.pop('weapon')
+
+    # Filter by user
+    if 'user' in query.keys():
+      user = self.usersCollection.find_one({"email" : {"$regex": query['user']}})
+      user = parse_json(user)
+
+      # Return empty list if user not found
+      if not user:
+        return jsonify(status = "ok", data = self.data)
+
+      userId = ObjectId(user['_id'])
+      query['user_id'] = userId
+
+      query.pop('user')
 
     weaponBuilds = [] 
     if args['limit'] > 0:
       weaponBuilds = self.weaponBuildsCollection.find(query).limit(args['limit'])
     else:
       weaponBuilds = self.weaponBuildsCollection.find(query)
-    
-    self.data = parse_json(weaponBuilds)
+
+    # Format output for night bot
+    if args['nightbot']: 
+
+      nightBotResponse = []
+
+      for build in weaponBuilds: 
+
+        buildToAdd = {}
+
+        buildToAdd['name'] = build['name']
+        lengthAttachments = len(build['attachments'])
+        buildToAdd['nr_of_attachments'] = lengthAttachments
+
+        if lengthAttachments > 0: 
+          
+          attachmentIterator = 1
+          for attachmentId in build['attachments']:
+
+            attachment = self.weaponAttachmentsCollection.find_one({"_id" : ObjectId(attachmentId)})
+            attachment = parse_json(attachment)
+
+            buildToAdd['attachment_' + str(attachmentIterator)] = attachment['name']
+
+            attachmentIterator += 1 
+
+        nightBotResponse.append(buildToAdd)
+
+      self.data = parse_json(nightBotResponse)
+      
+    else:
+
+      self.data = parse_json(weaponBuilds)
 
     return jsonify(status = "ok", data = self.data)
 
@@ -75,12 +120,12 @@ class WeaponBuildsList(Resource):
     if not hasattr(requestJson, "name_lower"):
       requestJson['name_lower'] = requestJson['name'].lower().strip().replace(" ", "")
 
-    # Check if streamer exits
-    streamer = self.streamersCollection.find_one({"_id" : ObjectId(requestJson['streamer_id'])})
-    if not streamer: 
+    # Check if user exits
+    user = self.usersCollection.find_one({"_id" : ObjectId(requestJson['user_id'])})
+    if not user: 
       return {}, 204 # nothing todo 
     
-    requestJson['streamer_id'] = ObjectId(requestJson['streamer_id'])
+    requestJson['user_id'] = ObjectId(requestJson['user_id'])
 
     # Check if weapon exists
     weapon = self.weaponsCollection.find_one({"_id" : ObjectId(requestJson['weapon_id'])})

@@ -16,37 +16,33 @@ def build_query(args):
   if 'name' in args.keys() and args['name'] != "":
     query['name_lower'] = args['name'].replace(" ","").replace("\"","").lower()
 
-  # Filter by twitch username
-  if 'twitch_username' in args.keys() and args['twitch_username'] != "": 
-    query['twitch_username'] = args['twitch_username']
-
-  # Filter by twitch profile
-  if 'twitch_profile' in args.keys() and args['twitch_profile'] != "":
-    query['twitch_profile'] = args['twitch_profile'].replace("\"","")
+  # Filter by role
+  if 'role' in args.keys() and args['role'] != "":
+    query['role'] = args['role'].replace(" ","").replace("\"","").lower()
 
   # Filter by weapon
   if 'weapon' in args.keys() and args['weapon'] != "":
     query['weapon'] = args['weapon'].replace(" ","").replace("\"","").lower()
 
-  # Filter by weapon id
-  if 'weapon_id' in args.keys() and args['weapon_id'] != "":
-    query['weapon_id'] = ObjectId(args['weapon_id'])
-
   # Filter by type 
   if 'type' in args.keys() and args['type'] != "":
     query['type'] = args['type'].replace(" ", "").replace("\"","").lower()
+
+  # Filter by user
+  if 'user' in args.keys() and args['user'] != "": 
+    query['user'] = args['user'].replace(" ", "").replace("\"","").lower()
+
+  # Filter by weapon id
+  if 'weapon_id' in args.keys() and args['weapon_id'] != "":
+    query['weapon_id'] = ObjectId(args['weapon_id'])
 
   # Filter by type id
   if 'type_id' in args.keys() and args['type_id'] != "":
     query['type_id'] = ObjectId(args['type_id'])
 
-  # Filter by streamer id
-  if 'streamer_id' in args.keys() and args['streamer_id'] != "":
-    query['streamer_id'] = ObjectId(args['streamer_id'])
-
-  # Filter by streamer
-  if 'streamer' in args.keys() and args['streamer'] != "":
-    query['streamer'] = args['streamer'].replace("\"", "").lower()
+  # Filter by user id
+  if 'user_id' in args.keys() and args['user_id'] != "":
+    query['user_id'] = ObjectId(args['user_id'])
 
   return query
 
@@ -74,12 +70,12 @@ def parse_json(data):
           if hasattr(j['weapon_id'], 'keys'):
             if '$oid' in j['weapon_id'].keys():
               j['weapon_id'] = j['weapon_id']['$oid']
-        
-        if 'streamer_id' in j.keys():
-          if hasattr(j['streamer_id'], 'keys'):
-            if '$oid' in j['streamer_id'].keys():
-              j['streamer_id'] = j['streamer_id']['$oid']
-      
+
+        if 'user_id' in j.keys():
+          if hasattr(j['user_id'], 'keys'):
+            if '$oid' in j['user_id'].keys():
+              j['user_id'] = j['user_id']['$oid']
+
         if 'type' in j.keys():
           if hasattr(j['type'], 'keys'):
             if hasattr(j['type']['_id'], 'keys'):
@@ -112,10 +108,10 @@ def parse_json(data):
           if '$oid' in jsonDump['weapon_id'].keys():
             jsonDump['weapon_id'] = jsonDump['weapon_id']['$oid']
 
-      if 'streamer_id' in jsonDump.keys():
-        if hasattr(jsonDump['streamer_id'], 'keys'):
-          if '$oid' in jsonDump['streamer_id'].keys():
-            jsonDump['streamer_id'] = jsonDump['streamer_id']['$oid']
+      if 'user_id' in jsonDump.keys():
+        if hasattr(jsonDump['user_id'], 'keys'):
+          if '$oid' in jsonDump['user_id'].keys():
+            jsonDump['user_id'] = jsonDump['user_id']['$oid']
 
       if 'type' in jsonDump.keys():
         if hasattr(jsonDump['type'], 'keys'):

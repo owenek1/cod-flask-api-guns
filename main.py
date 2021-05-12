@@ -1,5 +1,5 @@
-from flask import Flask, jsonify
-from flask_restful import Api, Resource
+from flask import Flask
+from flask_restful import Api
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 
@@ -8,16 +8,15 @@ from flask_jwt_extended import JWTManager
 import datetime
 
 # Resources
+from resources.home import Home
 from resources.weapons import Weapons, WeaponsList
 from resources.weaponTypes import WeaponTypes, WeaponTypesList
 from resources.weaponAttachmentTypes import WeaponAttachmentTypes, WeaponAttachmentTypesList
 from resources.weaponAttachments import WeaponAttachments, WeaponAttachmentsList
-from resources.twitchStreamers import TwitchStreamers, TwitchStreamersList
 from resources.weaponBuilds import WeaponBuilds, WeaponBuildsList
-
-from resources.users import UsersList, UsersLogin, UsersRegister, UsersLogout, TokenRefresh
-
+from resources.users import UsersList, UsersLogin, UsersRegister, TokenRefresh, UsersProfile
 from resources.secretResource import SecretResource
+from resources.nightbots import NightbotRegister, NightbotUnregister
 
 # Flask app configuration
 app = Flask(__name__)
@@ -36,36 +35,10 @@ mongo_db_uri = "mongodb+srv://admin:owenek@cluster0.ur0zv.mongodb.net/restAPIWea
 mongo = PyMongo(app, uri=mongo_db_uri)
 db = mongo.db
 
-# TODO
-# app.config['dbCollections'] = {
-#   "weapons" : db.weapons,
-#   "weaponTypes" : db.weaponTypes,
-#   "weaponAttachments" : db.weaponAttachments,
-#   "weaponAttachmentTypes" : db.weaponAttachmentTypes,
-#   "streamers" : db.twitchStreamers,
-#   "weponBuilds" : db.weaponBuilds
-# }
+# DB collections
+app.config['DB_COLLECTIONS'] = db
 
 # DB collections for resources
-UsersList.usersCollection = db.users
-
-UsersLogin.usersCollection = db.users
-UsersLogin.tokensCollection = db.tokens
-
-UsersRegister.usersCollection = db.users
-
-TwitchStreamersList.streamersCollection = db.twitchStreamers
-TwitchStreamers.streamersCollection = db.twitchStreamers
-
-Weapons.weaponsCollection = db.weapons
-Weapons.weaponTypesCollection = db.weaponTypes
-
-WeaponsList.weaponsCollection = db.weapons
-WeaponsList.weaponTypesCollection = db.weaponTypes
-
-WeaponTypes.weaponTypesCollection = db.weaponTypes
-WeaponTypesList.weaponTypesCollection = db.weaponTypes
-
 WeaponAttachmentTypes.weaponAttachmentTypesCollection = db.weaponAttachmentTypes
 WeaponAttachmentTypesList.weaponAttachmentTypesCollection = db.weaponAttachmentTypes
 
@@ -77,18 +50,13 @@ WeaponAttachmentsList.weaponsCollection = db.weapons
 WeaponAttachmentsList.weaponAttachmentTypesCollection = db.weaponAttachmentTypes
 
 WeaponBuildsList.weaponBuildsCollection = db.weaponBuilds
-WeaponBuildsList.streamersCollection = db.twitchStreamers
 WeaponBuildsList.weaponsCollection = db.weapons
 WeaponBuildsList.weaponAttachmentsCollection = db.weaponAttachments
+WeaponBuildsList.usersCollection = db.users
 
 WeaponBuilds.weaponBuildsCollection = db.weaponBuilds
 
-######### Resources #########
-class Home(Resource): 
-  def get(self):
-    return jsonify(api = "Rest API Call of Duty Warzone", version = "v1.0", author="Owen", email="owenek123@gmail.com")
-
-########### API ############
+########### Resources ############
 api = Api(app)
 api.add_resource(Home, "/", endpoint="home")
 
@@ -105,19 +73,25 @@ api.add_resource(WeaponAttachmentTypes, "/weaponAttachmentTypes/<string:id>")
 api.add_resource(WeaponAttachmentsList, "/weaponAttachments")
 api.add_resource(WeaponAttachments, "/weaponAttachments/<string:id>")
 
-api.add_resource(TwitchStreamersList, "/streamers")
-api.add_resource(TwitchStreamers, "/streamers/<string:id>")
-
+# Weapon builds endpoints 
 api.add_resource(WeaponBuildsList, "/builds")
 api.add_resource(WeaponBuilds, "/builds/<string:id>")
 
+# User endpoints
 api.add_resource(UsersRegister, "/register")
 
 api.add_resource(UsersLogin, "/login")
-api.add_resource(UsersLogout, "/logout")
 api.add_resource(TokenRefresh, "/token/refresh")
+api.add_resource(UsersProfile, "/user/profile")
 
+api.add_resource(UsersList, "/users")
+
+# Secret resources
 api.add_resource(SecretResource, "/secret")
+
+# Nightbots 
+api.add_resource(NightbotRegister, "/nightbot/register/<string:userId>")
+api.add_resource(NightbotUnregister, "/nightbot/unregister")
 
 # api.add_resource(WeaponAttachments, "/weapon/attachments/weapon/<string:weaponName>", endpoint="weaponattachmentsweaponname")
 # api.add_resource(WeaponAttachments, "/weapon/attachments/weaponid/<string:weaponId>", endpoint="weaponattachmentsweaponId")

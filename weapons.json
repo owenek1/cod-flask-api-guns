@@ -1,0 +1,329 @@
+{
+    "weapons": [
+        {
+            "name": "Kilo 141",
+            "url": "https://callofduty.fandom.com/wiki/Kilo_141",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "FAL",
+            "url": "https://callofduty.fandom.com/wiki/FAL",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "M4A1",
+            "url": "https://callofduty.fandom.com/wiki/M4A1",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "FR 5.56",
+            "url": "https://callofduty.fandom.com/wiki/FAMAS",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "Oden",
+            "url": "https://callofduty.fandom.com/wiki/Oden",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "M13",
+            "url": "https://callofduty.fandom.com/wiki/M13",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "FN Scar 17",
+            "url": "https://callofduty.fandom.com/wiki/SCAR-H",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "AK-47",
+            "url": "https://callofduty.fandom.com/wiki/AK-47",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "RAM-7",
+            "url": "https://callofduty.fandom.com/wiki/TAR-21",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "Grau 5.56",
+            "url": "https://callofduty.fandom.com/wiki/Grau_5.56",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "CR-56 AMAX",
+            "url": "https://callofduty.fandom.com/wiki/CR-56_AMAX",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "AN-94",
+            "url": "https://callofduty.fandom.com/wiki/AN-94",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "AS VAL",
+            "url": "https://callofduty.fandom.com/wiki/AS_VAL",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "AK-12",
+            "url": "https://callofduty.fandom.com/wiki/AK-12",
+            "type": "Assault Rifles"
+        },
+        {
+            "name": "AUG",
+            "url": "https://callofduty.fandom.com/wiki/AUG",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "P90",
+            "url": "https://callofduty.fandom.com/wiki/P90",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "MP5",
+            "url": "https://callofduty.fandom.com/wiki/MP5",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "Uzi",
+            "url": "https://callofduty.fandom.com/wiki/Uzi",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "PP19 Bizon",
+            "url": "https://callofduty.fandom.com/wiki/Bizon",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "MP7",
+            "url": "https://callofduty.fandom.com/wiki/MP7",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "Striker 45",
+            "url": "https://callofduty.fandom.com/wiki/Striker_45",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "Fennec",
+            "url": "https://callofduty.fandom.com/wiki/Vector",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "ISO",
+            "url": "https://callofduty.fandom.com/wiki/ISO",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "CX-9",
+            "url": "https://callofduty.fandom.com/wiki/Skorpion_EVO",
+            "type": "Submachine Guns"
+        },
+        {
+            "name": "Model 680",
+            "url": "https://callofduty.fandom.com/wiki/Remington_870_MCS",
+            "type": "Shotguns"
+        },
+        {
+            "name": "725",
+            "url": "https://callofduty.fandom.com/wiki/725",
+            "type": "Shotguns"
+        },
+        {
+            "name": "Origin 12 Shotgun",
+            "url": "https://callofduty.fandom.com/wiki/Origin_12_Shotgun",
+            "type": "Shotguns"
+        },
+        {
+            "name": "VLK Rogue",
+            "url": "https://callofduty.fandom.com/wiki/VLK_Rogue",
+            "type": "Shotguns"
+        },
+        {
+            "name": "JAK-12",
+            "url": "https://callofduty.fandom.com/wiki/AA-12",
+            "type": "Shotguns"
+        },
+        {
+            "name": "PKM",
+            "url": "https://callofduty.fandom.com/wiki/PKM",
+            "type": "Light Machine Guns"
+        },
+        {
+            "name": "SA87",
+            "url": "https://callofduty.fandom.com/wiki/L86_LSW",
+            "type": "Light Machine Guns"
+        },
+        {
+            "name": "M91",
+            "url": "https://callofduty.fandom.com/wiki/M91",
+            "type": "Light Machine Guns"
+        },
+        {
+            "name": "MG34",
+            "url": "https://callofduty.fandom.com/wiki/MG34",
+            "type": "Light Machine Guns"
+        },
+        {
+            "name": "Holger-26",
+            "url": "https://callofduty.fandom.com/wiki/MG36",
+            "type": "Light Machine Guns"
+        },
+        {
+            "name": "Bruen Mk9",
+            "url": "https://callofduty.fandom.com/wiki/M249_SAW",
+            "type": "Light Machine Guns"
+        },
+        {
+            "name": "RAAL MG",
+            "url": "https://callofduty.fandom.com/wiki/RAAL_MG",
+            "type": "Light Machine Guns"
+        },
+        {
+            "name": "EBR-14",
+            "url": "https://callofduty.fandom.com/wiki/M14_EBR",
+            "type": "Marksman Rifles"
+        },
+        {
+            "name": "MK2 Carbine",
+            "url": "https://callofduty.fandom.com/wiki/MK2_Carbine",
+            "type": "Marksman Rifles"
+        },
+        {
+            "name": "Kar98k",
+            "url": "https://callofduty.fandom.com/wiki/Kar98k",
+            "type": "Marksman Rifles"
+        },
+        {
+            "name": "Crossbow",
+            "url": "https://callofduty.fandom.com/wiki/Crossbow",
+            "type": "Marksman Rifles"
+        },
+        {
+            "name": "SKS",
+            "url": "https://callofduty.fandom.com/wiki/SKS",
+            "type": "Marksman Rifles"
+        },
+        {
+            "name": "SP-R 208",
+            "url": "https://callofduty.fandom.com/wiki/SP-R_208",
+            "type": "Marksman Rifles"
+        },
+        {
+            "name": "Dragunov",
+            "url": "https://callofduty.fandom.com/wiki/Dragunov",
+            "type": "Sniper Rifles"
+        },
+        {
+            "name": "HDR",
+            "url": "https://callofduty.fandom.com/wiki/HDR",
+            "type": "Sniper Rifles"
+        },
+        {
+            "name": "AX-50",
+            "url": "https://callofduty.fandom.com/wiki/AX-50",
+            "type": "Sniper Rifles"
+        },
+        {
+            "name": "Rytec AMR",
+            "url": "https://callofduty.fandom.com/wiki/Rytec_AMR",
+            "type": "Sniper Rifles"
+        },
+        {
+            "name": "X16",
+            "url": "https://callofduty.fandom.com/wiki/X16",
+            "type": "Handguns"
+        },
+        {
+            "name": "1911",
+            "url": "https://callofduty.fandom.com/wiki/M1911",
+            "type": "Handguns"
+        },
+        {
+            "name": ".357",
+            "url": "https://callofduty.fandom.com/wiki/.357_Magnum",
+            "type": "Handguns"
+        },
+        {
+            "name": "M19",
+            "url": "https://callofduty.fandom.com/wiki/M19",
+            "type": "Handguns"
+        },
+        {
+            "name": ".50 GS",
+            "url": "https://callofduty.fandom.com/wiki/Desert_Eagle",
+            "type": "Handguns"
+        },
+        {
+            "name": "Renetti",
+            "url": "https://callofduty.fandom.com/wiki/Renetti",
+            "type": "Handguns"
+        },
+        {
+            "name": "Sykov",
+            "url": "https://callofduty.fandom.com/wiki/Makarov_(weapon)",
+            "type": "Handguns"
+        },
+        {
+            "name": "PILA",
+            "url": "https://callofduty.fandom.com/wiki/PILA",
+            "type": "Launchers"
+        },
+        {
+            "name": "Strela-P",
+            "url": "https://callofduty.fandom.com/wiki/Strela-P",
+            "type": "Launchers"
+        },
+        {
+            "name": "JOKR",
+            "url": "https://callofduty.fandom.com/wiki/FGM-148_Javelin",
+            "type": "Launchers"
+        },
+        {
+            "name": "RPG-7",
+            "url": "https://callofduty.fandom.com/wiki/RPG-7",
+            "type": "Launchers"
+        },
+        {
+            "name": "Riot Shield",
+            "url": "https://callofduty.fandom.com/wiki/Riot_Shield",
+            "type": "Melee"
+        },
+        {
+            "name": "Combat Knife",
+            "url": "https://callofduty.fandom.com/wiki/Combat_Knife",
+            "type": "Melee"
+        },
+        {
+            "name": "Kali Sticks",
+            "url": "https://callofduty.fandom.com/wiki/Kali_Sticks",
+            "type": "Melee"
+        },
+        {
+            "name": "Dual Kodachis",
+            "url": "https://callofduty.fandom.com/wiki/Dual_Kodachis",
+            "type": "Melee"
+        },
+        {
+            "name": "Minigun",
+            "url": "https://callofduty.fandom.com/wiki/Minigun",
+            "type": "Special"
+        },
+        {
+            "name": "MGL-32 Grenade Launcher",
+            "url": "https://callofduty.fandom.com/wiki/War_Machine",
+            "type": "Special"
+        },
+        {
+            "name": "SO",
+            "url": "https://callofduty.fandom.com/wiki/Special_Ops",
+            "type": "Special"
+        },
+        {
+            "name": "WZ",
+            "url": "https://callofduty.fandom.com/wiki/Call_of_Duty:_Warzone",
+            "type": "Special"
+        }
+    ]
+}

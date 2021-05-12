@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import current_app, request, jsonify
 from flask_restful import Resource, reqparse
 
 from passlib.apps import custom_app_context as pwd_context
@@ -7,6 +7,8 @@ from utils import build_query, parse_json
 
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
 
+import datetime
+
 # db.User 
 # _id = ObjectId()
 # email = String
@@ -14,21 +16,25 @@ from flask_jwt_extended import create_access_token, create_refresh_token, get_jw
 
 class UsersList(Resource): 
   data = []
-  usersCollection = None
+  db = None
 
   def __init__(self):
 
     # Get arguments
     self.reqparseGet = reqparse.RequestParser()
-    self.reqparseGet.add_argument('user_id', type = str, default = 0, location = 'args')
-    self.reqparseGet.add_argument('twitch_username', type = str, default = "", location = 'args')
-    self.reqparseGet.add_argument('twitch_profile', type = str, default = "", location = 'args')
+    self.reqparseGet.add_argument('search', type = str, default = "", location = 'args')
+    self.reqparseGet.add_argument('user_id', type = str, default = "", location = 'args')
     self.reqparseGet.add_argument('limit', type = int, default = 0, location = 'args')
+    self.reqparseGet.add_argument('page',  type = int, default = 1, location = 'args')
+    self.reqparseGet.add_argument('role', type = str, default = "", location = 'args')
 
     # Post arguments 
     self.reqparsePost = reqparse.RequestParser()
     self.reqparsePost.add_argument('email', type=str, required=True, location='json')
     self.reqparsePost.add_argument('password', type=str, required=True, location='json')
+
+    # DB collections 
+    self.db = current_app.config['DB_COLLECTIONS']
 
     super(UsersList, self).__init__()
 
@@ -42,12 +48,12 @@ class UsersList(Resource):
     query = build_query(args)
 
     users = []
-    usersTotalCount = self.usersCollection.find(query).count()
+    usersTotalCount = self.db.users.find(query).count()
  
-     # Pagination for the results
+    # Pagination for the results
     if args['limit'] > 0:
       skips = args['limit'] * (args['page'] - 1)
-      users = self.usersCollection.find(query).skip(skips).limit(args['limit'])
+      users = self.db.users.find(query).skip(skips).limit(args['limit'])
       totalPages = round(usersTotalCount / args['limit'])
       self.totalPages = totalPages
       self.currentPage = args['page']
@@ -58,32 +64,23 @@ class UsersList(Resource):
 
     else:
 
-      users = self.usersCollection.find(query)
+      users = self.db.users.find(query)
       self.data = parse_json(users)
 
       return jsonify(status = "ok", data = self.data)
 
-  def _checkUserExists(self, email):
-    exists = False 
-
-    streamer = self.usersCollection.find_one({"email" : email})
-
-    if streamer:
-      exists = True
-    
-    return exists
-
 class UsersRegister(Resource):
 
-  data = []
-  usersCollection = None
-
+  db = None
   defaultRole = "user"
 
   def __init__(self):
     self.reqparsePost = reqparse.RequestParser()
     self.reqparsePost.add_argument('email', help="Email can't be empty!", type=str, required=True, location='json')
     self.reqparsePost.add_argument('password', help="Password can't be empty!", type=str, required=True, location='json')
+
+    # DB collections 
+    self.db = current_app.config['DB_COLLECTIONS']
 
     super(UsersRegister, self).__init__()
 
@@ -93,54 +90,71 @@ class UsersRegister(Resource):
       return {"message" : "Incorrect json"}, 500
 
     # Parse request parameters
-    args = self.reqparsePost.parse_args()
+    self.reqparsePost.parse_args()
 
     # Get json data
     requestJson = request.get_json()
 
-    requestJson['email'] = requestJson['email'].strip()
-    requestJson['password'] = requestJson['password'].strip()
+    email = requestJson['email'].strip()
+    password = requestJson['password'].strip()
 
-    # Check if the streamer already exists
-    userExists = self._checkUserExists(requestJson['email'])
-    if userExists: 
-      return {"status" : "error", "message" : "User with {} already exists!".format(requestJson['email'])}, 201
+    # Check if the user already exists
+    user = self._getUser(email)
+    if user: 
+      return {"message" : "User with {} is already registered!".format(email)}, 201
+
+    # Set email
+    requestJson['email'] = email
 
     # Hash password for user
-    requestJson['password'] = self._hashPassword(requestJson['password'])
+    requestJson['password'] = self._hashPassword(password)
 
     # Set default user role 
     requestJson['role'] = self.defaultRole
 
-    userAdd = self.usersCollection.insert_one(requestJson)
+    # Set register on date 
+    requestJson['registeredOn'] = datetime.datetime.now()
+
+    userAdd = self.db.users.insert_one(requestJson)
     userAddId = userAdd.inserted_id
 
     if userAddId:
-      return {"status" : "ok", "message" : "User registered successfully"}, 200
+      return {"status" : "ok", "message" : "User registered successfully"}, 201
     else:
       return {"status" : "error", "message" : "User has not been registered!"}, 401
 
   def _checkUserExists(self, email):
     exists = False 
 
-    streamer = self.usersCollection.find_one({"email" : email})
+    streamer = self.db.users.find_one({"email" : email})
 
     if streamer:
       exists = True
     
     return exists
 
+  def _getUser(self, email): 
+    user = self.db.users.find_one({"email" : email})
+
+    if user:
+      user = parse_json(user)
+
+    return user
+
   def _hashPassword(self, password):
     return pwd_context.hash(password)
 
 class UsersLogin(Resource):
 
-  usersCollection = None
+  db = None
 
   def __init__(self):
     self.reqparsePost = reqparse.RequestParser()
     self.reqparsePost.add_argument('email', help="Email can't be empty!", type=str, required=True, location='json')
     self.reqparsePost.add_argument('password', help="Password can't be empty!", type=str, required=True, location='json')
+
+    # DB collections 
+    self.db = current_app.config['DB_COLLECTIONS']
 
     super(UsersLogin, self).__init__()
 
@@ -150,26 +164,21 @@ class UsersLogin(Resource):
       return {"message" : "Incorrect json"}, 500
 
     # Parse request parameters
-    args = self.reqparsePost.parse_args()
+    self.reqparsePost.parse_args()
 
     # Get json data
     requestJson = request.get_json()
 
-    requestJson['email'] = requestJson['email'].strip()
-    requestJson['password'] = requestJson['password'].strip()
+    email = requestJson['email'].strip()
+    password = requestJson['password'].strip()
 
-    # Check if the streamer already exists
-    user = self.usersCollection.find_one({"email" : requestJson['email']})
-    if not user: 
+    # Check if exists
+    user = self._getUser(email)
+    if not user:
       return {"message" : "Invalid credentials"}, 401
 
-    # Parse json
-    user = parse_json(user)
-
     # Check if password is correct
-    isPasswordCorrect = self._verifyPassword(requestJson['password'], user['password'])
-    if not isPasswordCorrect:
-      return {"message" : "Invalid credentials"}, 200
+    self._verifyUsersPassword(password, user['password'])
 
     # Create new tokens
     access_token = create_access_token(identity = user['email'])
@@ -177,29 +186,53 @@ class UsersLogin(Resource):
 
     return jsonify(access_token = access_token, refresh_token = refresh_token)
 
-  def _checkUserExists(self, email):
-    exists = False 
-
-    user = self.usersCollection.find_one({"email" : email})
+  def _getUser(self, email): 
+    user = self.db.users.find_one({"email" : email})
 
     if user:
-      exists = True
-    
-    return exists
+      user = parse_json(user)
+
+    return user
 
   def _verifyPassword(self, password, hash):
-    return pwd_context.verify(password, hash)
+    isPasswordCorrect = pwd_context.verify(password, hash)
 
-class UsersLogout(Resource):
-
-  tokensCollection = None
-
-  def post(self):
-    pass
+    if not isPasswordCorrect:
+      return {"message" : "Invalid credentials"}, 401
+    else:
+      pass
  
 class TokenRefresh(Resource):
   @jwt_required(refresh=True)
   def post(self):
       current_user = get_jwt_identity()
-      new_access_token = create_access_token(identity=current_user, fresh=False)
+      new_access_token = create_access_token(identity=current_user, fresh=True)
       return jsonify(access_token = new_access_token)
+
+class UsersProfile(Resource):
+  db = None
+
+  def __init__(self):
+    # DB collections 
+    self.db = current_app.config['DB_COLLECTIONS']
+
+    super(UsersProfile, self).__init__()
+
+  @jwt_required()
+  def get(self):
+    current_user_email = get_jwt_identity()
+
+    user = self._getUser(current_user_email)
+
+    if not user:
+      return {"message" : "Invalid credentials"}, 401
+
+    return jsonify(status = "ok", data = user)
+
+  def _getUser(self, email): 
+    user = self.db.users.find_one({"email" : email})
+
+    if user:
+      user = parse_json(user)
+
+    return user

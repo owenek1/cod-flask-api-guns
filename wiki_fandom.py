@@ -1,89 +1,105 @@
 
-import sys, requests
+import requests, re
 from bs4 import BeautifulSoup
 
-from test_api_requests import getWeaponAttachmentTypes, addWeaponAttachments
+import test_api_requests as api
 
-weaponM13URL = "https://callofduty.fandom.com/wiki/M13"
-weaponAK47URL = "https://callofduty.fandom.com/wiki/AK-47"
-m13WeaponId = "6071dfd0e6546c380f42003b"
-ak47WeaponId = "6071dfd1e6546c380f42003e"
+from wiki_fandom_utils import parseWeaponAttachments, getWeaponAttachments, addWeaponToJsonFile
 
-page = requests.get(weaponAK47URL)
+################################################       
+########### Call of Duty Weapons ############### 
+################################################
+wikiFandom = "https://callofduty.fandom.com"
+weaponsURL = wikiFandom + "/wiki/Call_of_Duty:_Modern_Warfare_(2019)#Weapons"
 
+page = requests.get(weaponsURL)
 soup = BeautifulSoup(page.content, 'html.parser')
 
-# Get weapon attachments from API
-weaponAttachmentTypes = []
-weaponAttachmentTypes = getWeaponAttachmentTypes()
+print("... Get Call of Duty Modern Warfare weapons list from wiki fandom")
 
-print("... API weapon attachments " + str(len(weaponAttachmentTypes)))
-
-# Get all tables with class cod_weapons
-results = soup.find_all("span", {"id": "Attachments"})
+results = soup.find_all("span", {"id": "Weapons"})
 
 for result in results: 
 
-  attachmentElements = result.find_all_next("h3")
+  weaponsTable = result.find_next("table", {"class": "mw-collapsible"})
 
-  for element in attachmentElements: 
+  weaponsTr = weaponsTable.find_all("tr", {"style" : ""})
 
-    if "[edit | edit source]" in element.text:
+  for element in weaponsTr: 
 
-      attachmentType = element.text.split('[edit | edit source]')[0]
+    weaponsTd = element.find("td", {"class": "navbox-group"})
 
-      print("... " + attachmentType)  
+    if weaponsTd is not None:
 
-      attachmentTypeAPI = None
-      for attachmentTypeApi in weaponAttachmentTypes: 
-        if attachmentType == attachmentTypeApi['name']:
-          print("found attachment type in api " + attachmentType)
-          attachmentTypeAPI = attachmentTypeApi
-          break
-      
-      if attachmentTypeAPI is None: 
-        print("Did not find attachment type " + attachmentType)
-        break
+      weaponTypeName = weaponsTd.text
 
-      attachmentsUl = element.find_next("ul")
+      print ("Weapon type: " + weaponTypeName)
 
-      for attachmentUl in attachmentsUl.findChildren("li"): 
-        #print (dir(attachmentsUl))
-        
-        #print (attachmentUl)
-        attachmentName = attachmentUl.text
+      # Request API if weapon type exists
+      weaponTypeAPI = api.getWeaponTypeByName(weaponTypeName)
+      weaponTypeAPI = weaponTypeAPI['data']
 
-        splitAttachmentName = attachmentUl.text.split('(Lv.')
+      if len(weaponTypeAPI) == 0:
+        print("Weapon type not found!")
 
-        attachmentName = splitAttachmentName[0].replace(u'\xa0', u'')
+        addWeaponTypeChoice = input("Should we add " + weaponTypeName + " to database? ")        
+        if addWeaponTypeChoice.lower() == "y":
+          api.addWeaponType(weaponTypeName)
 
-        attachmentLvlReq = ""
-        if len(splitAttachmentName) > 1: 
-          attachmentLvlReq = splitAttachmentName[1].replace(")", "").replace(" ","")
+      else:
+        weaponTypeAPI = weaponTypeAPI[0]
+        print ("Weapon type API: " + weaponTypeAPI['name'])
 
-        # Add attachment to API
-        addWeaponAttachments(attachmentName, attachmentTypeAPI['_id'], m13WeaponId, attachmentLvlReq)
+        # Weapons list 
+        weaponsTdList = element.find("td", {"class": "navbox-list"})
 
-perks = result.find_next("h2")
-perksUl = perks.find_next("ul")
+        weapons = weaponsTdList.find_all("a", href=True)
 
-attachmentTypeAPI = None
-for attachmentTypeApi in weaponAttachmentTypes: 
-  if "Perk" == attachmentTypeApi['name']:
-    print("found attachment type in api " + attachmentType)
-    attachmentTypeAPI = attachmentTypeApi
-    break
+        for weapon in weapons: 
+          
+          weaponName = weapon.text
 
-for attachmentUl in perksUl.findChildren("li"):
+          print ("   Weapon name: " + weaponName)
 
-  attachmentName = attachmentUl.text
+          # Request API if weapon exists
+          weaponAPI = api.getWeaponByName(weaponName)
+          weaponAPI = weaponAPI['data']
 
-  splitAttachmentName = attachmentUl.text.split('(Lv.')
+          if len(weaponAPI) == 0:
+            print("Weapon not found!")
 
-  attachmentName = splitAttachmentName[0].replace(u'\xa0', u'')
+            addWeaponChoice = input("Should we add " + weaponName + " to database? ")
 
-  attachmentLvlReq = ""
-  if len(splitAttachmentName) > 1: 
-    attachmentLvlReq = splitAttachmentName[1].replace(")", "").replace(" ","")
+            if addWeaponChoice.lower() == "y":
+              api.addWeapon(weaponName, weaponTypeAPI['_id'])
 
-  addWeaponAttachments(attachmentName, attachmentTypeAPI['_id'], m13WeaponId, attachmentLvlReq)
+          else:
+            print ("   Weapon name API: " + weaponName)
+
+            weaponURL = wikiFandom + weapon['href']
+
+            weaponToAdd = {
+              "name" : weaponName, 
+              "url" : weaponURL,
+              "type" : weaponTypeName
+            }
+
+            addWeaponToJsonFile(weaponToAdd)
+
+            # weaponAttachmentTypesList = getWeaponAttachments(weaponURL)
+
+            # for weaponAttachmentType in weaponAttachmentTypesList: 
+            #   attachmentTypeAPI = api.getWeaponAttachmentTypeByName(weaponAttachmentType['name'])
+            #   attachmentTypeAPI = attachmentTypeAPI['data']
+            #   attachmentTypeId = attachmentTypeAPI[0]['_id']
+
+            #   attachmentsList = weaponAttachmentType['attachments']
+
+            #   weaponId = weaponAPI[0]['_id']
+
+            #   for attachment in attachmentsList:
+            #     print(api.addWeaponAttachment(attachment['name'], attachmentTypeId, weaponId, attachment['lvl_required']))
+
+    input()
+
+    print("############################################################")
