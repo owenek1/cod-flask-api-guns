@@ -1,8 +1,16 @@
+from flask import current_app
 from bson import json_util
 from bson.objectid import ObjectId
 
 import json
 
+from flask_jwt_extended import get_jwt_identity
+
+def validate_objectId(args, key):
+  if (args[key] != "" and not ObjectId.is_valid(args[key])):
+      return {}, 400
+  return 
+  
 def build_query(args):
 
   query = {}
@@ -46,49 +54,38 @@ def build_query(args):
 
   return query
 
+def replace_oid(key, obj):
+  if '$oid' in obj[key].keys():
+    obj[key] = obj[key]['$oid']  
+  return obj
+  
 def parse_json(data):
   """Replace ObjectId to string"""
-  jsonDump = json.loads(json_util.dumps(data))
-
+  jsonDump = json.loads(data)
+  
   if isinstance(jsonDump, list):
-    
     for j in jsonDump:
-
+      
       if hasattr(j, 'keys'):
+        keys = j.keys()
         
-        if '_id' in j.keys():
-          if hasattr(j['_id'], 'keys'):
-            if '$oid' in j['_id'].keys():
-              j['_id'] = j['_id']['$oid']
+        for k in keys:
+          if hasattr(j[k], 'keys'):
+            replace_oid(k, j)
+              
+        # if 'type' in j.keys():
+        #   if hasattr(j['type'], 'keys'):
+        #     if hasattr(j['type']['_id'], 'keys'):
+        #       if '$oid' in j['type']['_id'].keys():
+        #         j['type']['_id'] = j['type']['_id']['$oid']
 
-        if 'type_id' in j.keys():
-          if hasattr(j['type_id'], 'keys'):
-            if '$oid' in j['type_id'].keys():
-              j['type_id'] = j['type_id']['$oid']
-
-        if 'weapon_id' in j.keys():
-          if hasattr(j['weapon_id'], 'keys'):
-            if '$oid' in j['weapon_id'].keys():
-              j['weapon_id'] = j['weapon_id']['$oid']
-
-        if 'user_id' in j.keys():
-          if hasattr(j['user_id'], 'keys'):
-            if '$oid' in j['user_id'].keys():
-              j['user_id'] = j['user_id']['$oid']
-
-        if 'type' in j.keys():
-          if hasattr(j['type'], 'keys'):
-            if hasattr(j['type']['_id'], 'keys'):
-              if '$oid' in j['type']['_id'].keys():
-                j['type']['_id'] = j['type']['_id']['$oid']
-
-        if 'attachments' in j.keys():
-          if isinstance(j['attachments'], list):
-            attachments = []
-            for a in j['attachments']:
-              if '$oid' in a.keys():
-                attachments.append(a['$oid'])
-            j['attachments'] = attachments
+        # if 'attachments' in j.keys():
+        #   if isinstance(j['attachments'], list):
+        #     attachments = []
+        #     for a in j['attachments']:
+        #       if '$oid' in a.keys():
+        #         attachments.append(a['$oid'])
+        #     j['attachments'] = attachments
   else:
 
     if hasattr(jsonDump, 'keys'):
@@ -128,3 +125,30 @@ def parse_json(data):
             jsonDump['attachments'] = attachments
 
   return jsonDump
+
+def verify_user(is_admin=False): 
+  db = current_app.config['DB_COLLECTIONS']
+  current_user_email = get_jwt_identity()
+
+  user = db.users.find_one({"email" : current_user_email})
+
+  if user is None:
+      return {"message" : "Invalid credentials"}, 401
+    
+  user = parse_json(user)
+
+  if is_admin and user['role'] == "admin": 
+    return {"message" : "Not allowed"}, 400
+
+  return user
+
+def unset_empty_fields(args):
+  fieldsToUnset = []
+  for key in args.keys(): 
+    if args[key] is None:
+      fieldsToUnset.append(key)
+
+  for field in fieldsToUnset:
+    args.pop(field)
+
+  return args
